@@ -183,6 +183,15 @@ export function getOrElse<T>(getCb: () => T | undefined, defaultValue: T): T {
 }
 
 /**
+ * Polyfill for flatten.
+ * @param nestedArrays The array of arrays to flatten
+ * @returns Returns the flattened array.
+ */
+export function flatten<T>(nestedArrays: T[][]): T[] {
+  return ([] as T[]).concat(...nestedArrays);
+}
+
+/**
  * Checks if a value is defined, in a type-safe way.
  * Useful for filtering through arrays.
  * @param value The value to check.
