@@ -1,0 +1,19 @@
+{
+  "name": "@effinggames/ts-core-utils",
+  "version": "1.0.1",
+  "description": "Core utility functions written in typescript.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "tsc --noEmit && tslint --project .",
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@effinggames/ts-lint-configs": "^6.0.1",
+    "@types/node": "^10.12.18",
+    "tslint": "^5.12.1",
+    "typescript": "^3.2.4"
+  }
+}
