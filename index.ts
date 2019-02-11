@@ -29,13 +29,7 @@ export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
  * @returns Returns the value of the env variable.
  */
 export function getEnvVarOrThrow(name: string): string {
-  const value = process.env[name];
-
-  if (!value) {
-    throw new Error(`ENV variable: ${name} is not set!`);
-  }
-
-  return value;
+  return getOrThrow(() => process.env[name], `ENV variable: ${name} is not set!`);
 }
 
 export function pipe<A, B>(value: A, f1: (value: A) => B): B;
@@ -67,23 +61,13 @@ export function pipe<A, B, C, D, E, F, G>(
 ): G;
 /**
  * Transforms a value to another value.
- * Shallowly clones if an object or array to avoid mutation.
  * @param value The value to transform.
  * @param mapFunc The transform function.
  * @returns Returns the new value.
  */
 export function pipe<T, U>(value: T, ...mapFuncs: ((value: any) => any)[]): U {
-  let newValue;
-
-  if (Array.isArray(value)) {
-    newValue = value.slice(0);
-  } else if (typeof value === 'object' && value.constructor === Object) {
-    newValue = { ...value };
-  } else {
-    newValue = value;
-  }
-
-  return mapFuncs.reduce((value, mapFunc) => mapFunc(value), newValue);
+  // @ts-ignore
+  return mapFuncs.reduce((newValue, mapFunc) => mapFunc(newValue), value);
 }
 
 export function pipeSafely<A, B>(value: A | null | undefined, f1: (value: A) => B): B | undefined;
@@ -152,13 +136,14 @@ export function getSafely<T>(getCb: () => T | undefined): T | undefined {
  * If the callback throws an error or returns undefined, then throws an error.
  * Useful when accessing a dangerous interface or 'any' that's mandatory.
  * @param getCb Callback that accesses the value.
+ * @param errorMessage The error message to throw if undefined.
  * @returns Returns the value.
  */
-export function getOrThrow<T>(getCb: () => T | undefined): T {
+export function getOrThrow<T>(getCb: () => T | undefined, errorMessage: string = 'getOrThrow - undefined value!'): T {
   const result = getSafely(getCb);
 
   if (result === undefined) {
-    throw new Error('getOrThrow - undefined value!');
+    throw new Error(errorMessage);
   }
 
   return result;
@@ -202,6 +187,15 @@ export function notEmpty<T>(value: T | null | undefined): value is T {
 }
 
 /**
+ * Checks if a value is plain old javascript object.
+ * @param value The value to check.
+ * @returns Returns true/false if the value is a POJO.
+ */
+export function isPlainObject(value: any): value is Object {
+  return typeof value === 'object' && value.constructor === Object;
+}
+
+/**
  * Initializes a class and copies over additional properties.
  * @param entityClass The class to initialize.
  * @param partials The properties to copy over to the new object.
@@ -228,7 +222,7 @@ export function startAppWithCluster(initCb: () => void): void {
     let cpuCount;
 
     if (process.env.NODE_ENV === 'production') {
-      console.log('Running in production mode!');
+      console.info('Running in production mode!');
       cpuCount = require('os').cpus().length;
     } else {
       console.warn("Running in development mode, set NODE_ENV to 'production' for multi-core support.");
@@ -240,7 +234,7 @@ export function startAppWithCluster(initCb: () => void): void {
     }
 
     cluster.on('exit', (worker: any) => {
-      console.log('Worker %d died :(', worker.id);
+      console.error('Worker %d died :(', worker.id);
       cluster.fork();
     });
   } else {
